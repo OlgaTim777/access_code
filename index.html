@@ -120,6 +120,7 @@
         <div class="control-group">
             <label>Фоновая картинка</label>
             <input type="file" id="bgImage" accept="image/*">
+            <small style="color: #636e72;">Картинка автоматически сожмется для Genially</small>
         </div>
         <div class="control-group">
             <label>Заголовок</label>
@@ -168,12 +169,41 @@
         const outputCode = document.getElementById('outputCode');
         const copyBtn = document.getElementById('copyBtn');
 
+        // Мощный компрессор картинок, чтобы обойти лимиты Genially
         inputs.bgImage.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Сжимаем картинку до оптимального размера для экрана (макс. ширина 1000px)
+                    const MAX_WIDTH = 1000;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Превращаем в супер-легкий JPEG (качество 60%)
+                    currentBgImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    updatePreview();
+                };
                 const reader = new FileReader();
-                reader.onload = e => { currentBgImageBase64 = e.target.result; updatePreview(); };
+                reader.onload = function(event) {
+                    img.src = event.target.result;
+                };
                 reader.readAsDataURL(file);
+            } else {
+                currentBgImageBase64 = "";
+                updatePreview();
             }
         });
 
@@ -183,6 +213,7 @@
 
         function generateHTML() {
             const bg = currentBgImageBase64 ? `url('${currentBgImageBase64}') center/cover` : inputs.bgColor.value;
+            // Возвращаем абсолютно тот же самый успешно работающий код 3
             return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;font-family:sans-serif;overflow:hidden;transition:opacity .8s}#lock{width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:${bg}}.card{background:rgba(255,255,255,.1);backdrop-filter:blur(15px);padding:40px;border-radius:20px;border:1px solid rgba(255,255,255,.2);text-align:center;color:#fff}input{width:100%;padding:15px;border-radius:10px;border:none;margin:20px 0;box-sizing:border-box}button{width:100%;padding:15px;border:none;border-radius:10px;background:#6c5ce7;color:#fff;font-weight:bold;cursor:pointer}.error{color:#ff7675}</style></head><body><div id="lock"><div class="card"><h1>${inputs.titleText.value}</h1><input type="email" id="email" placeholder="${inputs.placeholderText.value}"><button onclick="check()">${inputs.btnText.value}</button><div id="msg"></div></div></div><script>async function check(){const i=document.getElementById("email").value.trim().toLowerCase();if(!i)return;try{const r=await fetch("${CSV_URL}");const d=await r.text();if(d.toLowerCase().includes(i)){document.getElementById("msg").innerHTML="Успех!";setTimeout(()=>{document.body.style.opacity="0";setTimeout(()=>document.body.style.pointerEvents="none",800)},500)}else{document.getElementById("msg").innerHTML='<span class="error">${inputs.errorText.value}</span>'}}catch(e){}}<\/script></body></html>`;
         }
 
@@ -190,18 +221,16 @@
             const html = generateHTML();
             previewFrame.srcdoc = html;
             
-            // Профессиональное решение: используем скрипт-обертку, который сам создает Blob
-            // Это гарантирует работу iframe в любом окружении Genially
-            const escapedHtml = html.replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            const loader = `
-                <script>
-                    const h = \`${escapedHtml}\`;
-                    const b = new Blob([h], {type: 'text/html'});
-                    window.location.replace(URL.createObjectURL(b));
-                <\/script>
-            `;
-            const encodedLoader = encodeURIComponent(loader.trim());
-            outputCode.value = `<iframe style="width:100%;height:100%;border:none;background:transparent;" src="data:text/html;charset=utf-8,${encodedLoader}"></iframe>`;
+            // Надежный метод srcdoc с правильным экранированием кавычек и спецсимволов.
+            // Именно этот формат безошибочно читается встраиваемыми блоками.
+            const escapedHtml = html
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
+            outputCode.value = `<iframe style="width:100%; height:100%; border:none; position:absolute; top:0; left:0; z-index:9999;" allow="autoplay" srcdoc="${escapedHtml}"></iframe>`;
         }
 
         copyBtn.addEventListener('click', () => {
@@ -211,6 +240,7 @@
             setTimeout(() => copyBtn.innerText = "Копировать iframe", 2000);
         });
 
+        // Запуск при старте
         updatePreview();
     </script>
 </body>
