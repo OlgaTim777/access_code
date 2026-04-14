@@ -15,12 +15,7 @@
             --neon-glow: 0 0 10px rgba(108, 92, 231, 0.5);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
         body {
             background-color: var(--bg-dark);
@@ -30,7 +25,6 @@
             overflow: hidden;
         }
 
-        /* Layout */
         .editor-container {
             width: 400px;
             background-color: var(--panel-bg);
@@ -49,36 +43,20 @@
             display: flex;
             flex-direction: column;
             padding: 20px;
-            background: repeating-linear-gradient(
-                45deg,
-                #222,
-                #222 10px,
-                #262626 10px,
-                #262626 20px
-            );
+            background: repeating-linear-gradient(45deg, #222, #222 10px, #262626 10px, #262626 20px);
         }
 
         h2 {
             font-size: 1.2rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
             color: var(--primary);
             text-shadow: var(--neon-glow);
             margin-bottom: 10px;
             text-align: center;
         }
 
-        /* Form Elements */
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
-            font-size: 0.9rem;
-            color: #b2bec3;
-        }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 0.9rem; color: #b2bec3; }
 
         input[type="text"], input[type="color"] {
             width: 100%;
@@ -88,23 +66,6 @@
             background: #1a1a2e;
             color: white;
             outline: none;
-            transition: all 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--primary);
-            box-shadow: var(--neon-glow);
-        }
-
-        input[type="color"] {
-            height: 40px;
-            padding: 2px;
-            cursor: pointer;
-        }
-
-        input[type="file"] {
-            font-size: 0.85rem;
-            color: #b2bec3;
         }
 
         .btn {
@@ -115,40 +76,24 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.3s ease;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.3s ease;
         }
 
         .btn:hover {
             background-color: var(--primary-hover);
             box-shadow: var(--neon-glow);
-            transform: translateY(-2px);
         }
 
-        /* Preview area */
         .preview-wrapper {
             flex-grow: 1;
             background: white;
             border-radius: 12px;
             overflow: hidden;
             border: 2px solid var(--border);
-            position: relative;
         }
 
-        iframe#preview-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Code Output Area */
-        .output-group {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        iframe#preview-frame { width: 100%; height: 100%; border: none; }
 
         textarea {
             width: 100%;
@@ -162,65 +107,52 @@
             font-family: monospace;
             font-size: 0.8rem;
         }
-
     </style>
 </head>
 <body>
 
     <div class="editor-container">
         <h2>Настройки защиты</h2>
-
         <div class="control-group">
-            <label>Цвет фона страницы</label>
+            <label>Цвет фона</label>
             <input type="color" id="bgColor" value="#1a1a2e">
         </div>
-
         <div class="control-group">
-            <label>Или загрузи фоновую картинку</label>
+            <label>Фоновая картинка</label>
             <input type="file" id="bgImage" accept="image/*">
-            <small style="color: #636e72;">Картинка заполнит весь экран</small>
         </div>
-
         <div class="control-group">
             <label>Заголовок</label>
             <input type="text" id="titleText" value="Доступ к игре">
         </div>
-
         <div class="control-group">
-            <label>Текст внутри поля ввода</label>
+            <label>Плейсхолдер</label>
             <input type="text" id="placeholderText" value="Введите ваш email">
         </div>
-
         <div class="control-group">
             <label>Текст кнопки</label>
             <input type="text" id="btnText" value="Войти">
         </div>
-
         <div class="control-group">
-            <label>Ошибка (если почты нет)</label>
+            <label>Текст ошибки</label>
             <input type="text" id="errorText" value="Доступ запрещен. Проверьте почту.">
         </div>
 
-        <hr style="border-color: var(--border); margin: 10px 0;">
-
         <div class="output-group">
             <h2>Код для Genially</h2>
-            <button class="btn" id="copyBtn">Копировать iframe</button>
+            <button class="btn" id="copyBtn" style="width:100%; margin-bottom:10px;">Копировать iframe</button>
             <textarea id="outputCode" readonly></textarea>
         </div>
     </div>
 
     <div class="preview-container">
-        <h2 style="text-align: left; margin-bottom: 15px; color: #fff;">Предпросмотр (Режим реального времени)</h2>
         <div class="preview-wrapper">
             <iframe id="preview-frame"></iframe>
         </div>
     </div>
 
     <script>
-        // Ссылка на Google Таблицу пользователя
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTm4-QeBC_DQTyLldI-j-Yi7EOuwp1J5cRVXEmU0BGAlRPBcrwXAQEc9B9TCyryc7Dp5USQLRxoe4k3/pub?output=csv";
-
         let currentBgImageBase64 = "";
 
         const inputs = {
@@ -236,202 +168,49 @@
         const outputCode = document.getElementById('outputCode');
         const copyBtn = document.getElementById('copyBtn');
 
-        // Обработка загрузки картинки (конвертируем в Base64 для независимости кода)
         inputs.bgImage.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    currentBgImageBase64 = event.target.result;
-                    updatePreview();
-                };
+                reader.onload = e => { currentBgImageBase64 = e.target.result; updatePreview(); };
                 reader.readAsDataURL(file);
-            } else {
-                currentBgImageBase64 = "";
-                updatePreview();
             }
         });
 
-        // Слушатели для текстовых полей и цвета
-        ['bgColor', 'titleText', 'placeholderText', 'btnText', 'errorText'].forEach(id => {
-            inputs[id].addEventListener('input', updatePreview);
+        Object.keys(inputs).forEach(id => {
+            if(id !== 'bgImage') inputs[id].addEventListener('input', updatePreview);
         });
 
         function generateHTML() {
-            const bgStyle = currentBgImageBase64 
-                ? `background: url('${currentBgImageBase64}') center/cover no-repeat;` 
-                : `background-color: ${inputs.bgColor.value};`;
-
-            return `
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            transition: opacity 0.8s ease; /* Плавное исчезновение */
-        }
-        #lock-screen {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            ${bgStyle}
-        }
-        .login-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        h1 {
-            color: #fff;
-            margin-bottom: 25px;
-            font-size: 24px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        input[type="email"] {
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-            font-size: 16px;
-            outline: none;
-            box-sizing: border-box;
-            background: rgba(255,255,255,0.9);
-        }
-        button {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: #6c5ce7;
-            color: #fff;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-        }
-        button:hover {
-            background: #5b4bc4;
-            transform: translateY(-2px);
-        }
-        #message {
-            margin-top: 15px;
-            font-size: 14px;
-            min-height: 20px;
-        }
-        .error { color: #ff7675; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-        .success { color: #55efc4; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-    </style>
-</head>
-<body>
-    <div id="lock-screen">
-        <div class="login-card">
-            <h1>${inputs.titleText.value}</h1>
-            <input type="email" id="email" placeholder="${inputs.placeholderText.value}">
-            <button onclick="checkAccess()">${inputs.btnText.value}</button>
-            <div id="message"></div>
-        </div>
-    </div>
-
-    <script>
-        const sheetUrl = "${CSV_URL}";
-        const msgDiv = document.getElementById('message');
-
-        async function checkAccess() {
-            const emailInput = document.getElementById('email').value.trim().toLowerCase();
-            const btn = document.querySelector('button');
-            
-            if(!emailInput) {
-                msgDiv.innerHTML = '<span class="error">Пожалуйста, введите email.</span>';
-                return;
-            }
-
-            btn.innerText = 'Проверка...';
-            msgDiv.innerHTML = '';
-
-            try {
-                // Запрашиваем данные из Google Таблицы
-                const response = await fetch(sheetUrl);
-                const data = await response.text();
-                
-                // Разбиваем CSV на массив почт (учитываем запятые и переносы строк)
-                const emails = data.split(/[\\n,]+/).map(e => e.trim().toLowerCase());
-
-                if (emails.includes(emailInput)) {
-                    // Доступ разрешен!
-                    msgDiv.innerHTML = '<span class="success">Доступ разрешен! Загрузка...</span>';
-                    
-                    // Плавное исчезновение
-                    setTimeout(() => {
-                        document.body.style.opacity = '0';
-                        // Через 800мс (время анимации) отключаем перехват кликов,
-                        // чтобы ученик мог кликать по игре Genially, которая под iframe!
-                        setTimeout(() => {
-                            document.body.style.pointerEvents = 'none';
-                        }, 800);
-                    }, 500);
-                } else {
-                    // Доступ запрещен
-                    msgDiv.innerHTML = '<span class="error">${inputs.errorText.value}</span>';
-                    btn.innerText = '${inputs.btnText.value}';
-                }
-            } catch (err) {
-                msgDiv.innerHTML = '<span class="error">Ошибка соединения с базой.</span>';
-                btn.innerText = '${inputs.btnText.value}';
-            }
-        }
-        
-        // Вход по нажатию Enter
-        document.getElementById('email').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') checkAccess();
-        });
-    <\/script>
-</body>
-</html>`;
+            const bg = currentBgImageBase64 ? `url('${currentBgImageBase64}') center/cover` : inputs.bgColor.value;
+            return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;font-family:sans-serif;overflow:hidden;transition:opacity .8s}#lock{width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:${bg}}.card{background:rgba(255,255,255,.1);backdrop-filter:blur(15px);padding:40px;border-radius:20px;border:1px solid rgba(255,255,255,.2);text-align:center;color:#fff}input{width:100%;padding:15px;border-radius:10px;border:none;margin:20px 0;box-sizing:border-box}button{width:100%;padding:15px;border:none;border-radius:10px;background:#6c5ce7;color:#fff;font-weight:bold;cursor:pointer}.error{color:#ff7675}</style></head><body><div id="lock"><div class="card"><h1>${inputs.titleText.value}</h1><input type="email" id="email" placeholder="${inputs.placeholderText.value}"><button onclick="check()">${inputs.btnText.value}</button><div id="msg"></div></div></div><script>async function check(){const i=document.getElementById("email").value.trim().toLowerCase();if(!i)return;try{const r=await fetch("${CSV_URL}");const d=await r.text();if(d.toLowerCase().includes(i)){document.getElementById("msg").innerHTML="Успех!";setTimeout(()=>{document.body.style.opacity="0";setTimeout(()=>document.body.style.pointerEvents="none",800)},500)}else{document.getElementById("msg").innerHTML='<span class="error">${inputs.errorText.value}</span>'}}catch(e){}}<\/script></body></html>`;
         }
 
         function updatePreview() {
             const html = generateHTML();
-            
-            // Обновляем предпросмотр
             previewFrame.srcdoc = html;
-
-            // Генерируем надежный Base64 код для Genially
-            // encodeURIComponent предотвращает ошибки с кириллицей в Base64
-            const base64Html = btoa(unescape(encodeURIComponent(html)));
-            const iframeCode = `<iframe style="width:100%; height:100%; border:none; position:absolute; top:0; left:0; z-index:9999;" allow="autoplay" src="data:text/html;base64,${base64Html}"></iframe>`;
             
-            outputCode.value = iframeCode;
+            // Профессиональное решение: используем скрипт-обертку, который сам создает Blob
+            // Это гарантирует работу iframe в любом окружении Genially
+            const escapedHtml = html.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+            const loader = `
+                <script>
+                    const h = \`${escapedHtml}\`;
+                    const b = new Blob([h], {type: 'text/html'});
+                    window.location.replace(URL.createObjectURL(b));
+                <\/script>
+            `;
+            const encodedLoader = encodeURIComponent(loader.trim());
+            outputCode.value = `<iframe style="width:100%;height:100%;border:none;background:transparent;" src="data:text/html;charset=utf-8,${encodedLoader}"></iframe>`;
         }
 
-        // Копирование кода
         copyBtn.addEventListener('click', () => {
             outputCode.select();
             document.execCommand('copy');
-            const originalText = copyBtn.innerText;
-            copyBtn.innerText = "Скопировано!";
-            copyBtn.style.backgroundColor = "#4cd137";
-            setTimeout(() => {
-                copyBtn.innerText = originalText;
-                copyBtn.style.backgroundColor = "var(--primary)";
-            }, 2000);
+            copyBtn.innerText = "Готово!";
+            setTimeout(() => copyBtn.innerText = "Копировать iframe", 2000);
         });
 
-        // Инициализация при первой загрузке
         updatePreview();
     </script>
 </body>
