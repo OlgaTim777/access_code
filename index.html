@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genially Access Code Editor</title>
+    <title>Genially Access Code Editor v16 Fixed</title>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -58,7 +58,7 @@
         .control-group { display: flex; flex-direction: column; gap: 8px; }
         label { font-size: 0.9rem; color: #b2bec3; }
 
-        input[type="text"], input[type="color"] {
+        input[type="text"], input[type="color"], select {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -91,6 +91,7 @@
             border-radius: 12px;
             overflow: hidden;
             border: 2px solid var(--border);
+            position: relative;
         }
 
         iframe#preview-frame { width: 100%; height: 100%; border: none; }
@@ -118,25 +119,21 @@
             <input type="color" id="bgColor" value="#1a1a2e">
         </div>
         <div class="control-group">
-            <label>Фоновая картинка</label>
-            <input type="file" id="bgImage" accept="image/*">
-            <small style="color: #636e72;">Картинка автоматически сожмется для Genially</small>
-        </div>
-        <div class="control-group">
             <label>Заголовок</label>
             <input type="text" id="titleText" value="Доступ к игре">
         </div>
         <div class="control-group">
-            <label>Плейсхолдер</label>
-            <input type="text" id="placeholderText" value="Введите ваш email">
-        </div>
-        <div class="control-group">
-            <label>Текст кнопки</label>
-            <input type="text" id="btnText" value="Войти">
-        </div>
-        <div class="control-group">
             <label>Текст ошибки</label>
-            <input type="text" id="errorText" value="Доступ запрещен. Проверьте почту.">
+            <input type="text" id="errorText" value="Почты нет в списке">
+        </div>
+        
+        <div class="control-group">
+            <label>Анимация исчезновения</label>
+            <select id="animType">
+                <option value="fade">Раствориться</option>
+                <option value="slideUp">Уехать вверх</option>
+                <option value="shrink">Уменьшиться</option>
+            </select>
         </div>
 
         <div class="output-group">
@@ -154,93 +151,116 @@
 
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTm4-QeBC_DQTyLldI-j-Yi7EOuwp1J5cRVXEmU0BGAlRPBcrwXAQEc9B9TCyryc7Dp5USQLRxoe4k3/pub?output=csv";
-        let currentBgImageBase64 = "";
 
         const inputs = {
             bgColor: document.getElementById('bgColor'),
-            bgImage: document.getElementById('bgImage'),
             titleText: document.getElementById('titleText'),
-            placeholderText: document.getElementById('placeholderText'),
-            btnText: document.getElementById('btnText'),
-            errorText: document.getElementById('errorText')
+            errorText: document.getElementById('errorText'),
+            animType: document.getElementById('animType')
         };
 
         const previewFrame = document.getElementById('preview-frame');
         const outputCode = document.getElementById('outputCode');
-        const copyBtn = document.getElementById('copyBtn');
 
-        // Мощный компрессор картинок, чтобы обойти лимиты Genially
-        inputs.bgImage.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Сжимаем картинку до оптимального размера для экрана (макс. ширина 1000px)
-                    const MAX_WIDTH = 1000;
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > MAX_WIDTH) {
-                        height = Math.round((height * MAX_WIDTH) / width);
-                        width = MAX_WIDTH;
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Превращаем в супер-легкий JPEG (качество 60%)
-                    currentBgImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    updatePreview();
-                };
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                currentBgImageBase64 = "";
-                updatePreview();
-            }
-        });
-
-        Object.keys(inputs).forEach(id => {
-            if(id !== 'bgImage') inputs[id].addEventListener('input', updatePreview);
-        });
+        Object.keys(inputs).forEach(id => inputs[id].addEventListener('input', updatePreview));
 
         function generateHTML() {
-            const bg = currentBgImageBase64 ? `url('${currentBgImageBase64}') center/cover` : inputs.bgColor.value;
-            // Возвращаем абсолютно тот же самый успешно работающий код 3
-            return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><style>body,html{margin:0;padding:0;width:100%;height:100%;font-family:sans-serif;overflow:hidden;transition:opacity .8s}#lock{width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:${bg}}.card{background:rgba(255,255,255,.1);backdrop-filter:blur(15px);padding:40px;border-radius:20px;border:1px solid rgba(255,255,255,.2);text-align:center;color:#fff}input{width:100%;padding:15px;border-radius:10px;border:none;margin:20px 0;box-sizing:border-box}button{width:100%;padding:15px;border:none;border-radius:10px;background:#6c5ce7;color:#fff;font-weight:bold;cursor:pointer}.error{color:#ff7675}</style></head><body><div id="lock"><div class="card"><h1>${inputs.titleText.value}</h1><input type="email" id="email" placeholder="${inputs.placeholderText.value}"><button onclick="check()">${inputs.btnText.value}</button><div id="msg"></div></div></div><script>async function check(){const i=document.getElementById("email").value.trim().toLowerCase();if(!i)return;try{const r=await fetch("${CSV_URL}");const d=await r.text();if(d.toLowerCase().includes(i)){document.getElementById("msg").innerHTML="Успех!";setTimeout(()=>{document.body.style.opacity="0";setTimeout(()=>document.body.style.pointerEvents="none",800)},500)}else{document.getElementById("msg").innerHTML='<span class="error">${inputs.errorText.value}</span>'}}catch(e){}}<\/script></body></html>`;
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:sans-serif;}
+        #lock{width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:${inputs.bgColor.value};color:white;text-align:center;}
+        input{padding:10px;border-radius:5px;border:none;margin:10px;}
+        button{padding:10px 20px;border-radius:5px;border:none;background:#6c5ce7;color:white;cursor:pointer;}
+        .spinner {display:none;width:30px;height:30px;border:4px solid #fff;border-top:4px solid #6c5ce7;border-radius:50%;animation:spin 1s linear infinite;margin:10px auto;}
+        @keyframes spin {100%{transform:rotate(360deg);}}
+    </style>
+</head>
+<body>
+    <div id="lock">
+        <div>
+            <h1>${inputs.titleText.value}</h1>
+            <input type="email" id="email" placeholder="Email...">
+            <button onclick="check()">Войти</button>
+            <div id="spinner" class="spinner"></div>
+            <div id="msg" style="color:#ff7675;margin-top:10px;"></div>
+        </div>
+    </div>
+    <script>
+        async function check() {
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const msg = document.getElementById('msg');
+            const spinner = document.getElementById('spinner');
+            if(!email) return;
+            
+            msg.innerText = '';
+            spinner.style.display = 'block';
+
+            try {
+                const res = await fetch("${CSV_URL}&cb=" + Date.now());
+                const text = await res.text();
+                const emails = text.split('\\n').map(e => e.trim().toLowerCase());
+                
+                if(emails.includes(email)) {
+                    localStorage.setItem('auth_gen', email);
+                    window.parent.postMessage("unlock_genially|${inputs.animType.value}", "*");
+                } else {
+                    msg.innerText = "${inputs.errorText.value}";
+                }
+            } catch(e) { msg.innerText = "Ошибка сети"; }
+            spinner.style.display = 'none';
+        }
+
+        window.onload = () => {
+            if(localStorage.getItem('auth_gen')) {
+                window.parent.postMessage("unlock_genially|${inputs.animType.value}", "*");
+            }
+        };
+    <\/script>
+</body>
+</html>`;
         }
 
         function updatePreview() {
             const html = generateHTML();
             previewFrame.srcdoc = html;
+            const escaped = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             
-            // Надежный метод srcdoc с правильным экранированием кавычек и спецсимволов.
-            // Именно этот формат безошибочно читается встраиваемыми блоками.
-            const escapedHtml = html
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-            
-            outputCode.value = `<iframe style="width:100%; height:100%; border:none; position:absolute; top:0; left:0; z-index:9999;" allow="autoplay" srcdoc="${escapedHtml}"></iframe>`;
+            outputCode.value = `
+<div id="genially_lock_wrapper" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; transition: all 0.8s ease-in-out;">
+    <iframe id="lock_frame" style="width:100%; height:100%; border:none;" srcdoc="${escaped}"></iframe>
+    <script>
+        window.addEventListener('message', function(event) {
+            if (event.data.startsWith('unlock_genially')) {
+                const parts = event.data.split('|');
+                const anim = parts[1];
+                const wrapper = document.getElementById('genially_lock_wrapper');
+                
+                if(wrapper) {
+                    // ГЛАВНОЕ ИСПРАВЛЕНИЕ: Мгновенно отключаем блокировку кликов
+                    wrapper.style.pointerEvents = 'none';
+                    wrapper.style.zIndex = '-1';
+                    wrapper.style.opacity = '0';
+                    
+                    if(anim === 'slideUp') wrapper.style.transform = 'translateY(-100%)';
+                    if(anim === 'shrink') wrapper.style.transform = 'scale(0)';
+
+                    // Полное удаление элемента через секунду
+                    setTimeout(() => wrapper.remove(), 1000);
+                }
+            }
+        }, false);
+    <\/script>
+</div>`.trim();
         }
 
-        copyBtn.addEventListener('click', () => {
+        document.getElementById('copyBtn').addEventListener('click', () => {
             outputCode.select();
             document.execCommand('copy');
-            copyBtn.innerText = "Готово!";
-            setTimeout(() => copyBtn.innerText = "Копировать iframe", 2000);
+            alert("Код скопирован!");
         });
 
-        // Запуск при старте
         updatePreview();
     </script>
 </body>
